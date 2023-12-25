@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -17,41 +16,42 @@ type Response struct {
 }
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
-			var message Message
-			err := json.NewDecoder(r.Body).Decode(&message)
-			if err != nil {
-				response := Response{
-					Status:  "400",
-					Message: "Invalid JSON message",
-				}
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(response)
-				return
-			}
-			if message.Message == "" {
-				response := Response{
-					Status:  "400",
-					Message: "Invalid JSON message",
-				}
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(response)
-				return
-			}
-			fmt.Println(message.Message)
-			response := Response{
-				Status:  "success",
-				Message: "Data successfully received",
-			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	http.HandleFunc("/", handleRequestHome)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Server listening on port 8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		fmt.Println("Server Error:", err)
+	}
+}
+
+func handleRequestHome(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		var message Message
+		err := json.NewDecoder(r.Body).Decode(&message)
+		if err != nil {
+			sendResponse(w, "400")
+			return
+		}
+		if message.Message == "" {
+			sendResponse(w, "400")
+			return
+		}
+		fmt.Println(message.Message)
+		sendResponse(w, "200")
+	} else {
+		http.Error(w, "Этот метод не обрабатывается", http.StatusMethodNotAllowed)
+	}
+}
+
+func sendResponse(w http.ResponseWriter, status string) {
+	var message string
+	if status == "200" {
+		message = "Данные успешно приняты"
+		w.WriteHeader(http.StatusOK)
+	} else {
+		message = "Некорректное JSON-сообщение"
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{status, message})
 }
