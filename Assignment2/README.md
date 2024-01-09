@@ -6,7 +6,7 @@ This project focuses on implementing advanced CRUD operations and migrations in 
 
 ## Participants
 
-- Ansar Shaumen
+- Angsar Shaumen
 - Makar Goryakin
 - Amandyk Baktybaiuly
 
